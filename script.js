@@ -1,8 +1,8 @@
 /**
- * 人生贖回計畫 - 看板核心邏輯 (GitHub 部署版)
+ * 人生贖回計畫 - 看板核心邏輯 (GitHub 部署修正版)
  */
 
-// 1. 初始化資料結構 (5 個區塊)
+// 1. 初始化資料結構
 const defaultData = [
     { id: 'col1', title: '💡 靈感/點子', items: ['開發個人資產系統', '原創 IP 角色構思'] },
     { id: 'col2', title: '⏳ 進行中', items: ['甜點實驗：焦糖布丁', 'GitHub 部署測試'] },
@@ -16,6 +16,7 @@ let boardData = JSON.parse(localStorage.getItem('myKanbanData')) || defaultData;
 // 2. 渲染畫面的主函式
 function renderBoard() {
     const mainBoard = document.getElementById('mainBoard');
+    if (!mainBoard) return;
     mainBoard.innerHTML = '';
 
     boardData.forEach((column, colIndex) => {
@@ -23,17 +24,17 @@ function renderBoard() {
         colDiv.className = 'column';
         colDiv.innerHTML = `
             <div class="column-header">
-                <input class="column-title" value="${column.title}" onchange="editColumn(${colIndex}, this.value)">
+                <input class="column-title" value="${column.title}" data-col="${colIndex}">
             </div>
-            <div id="${column.id}" class="list-group" data-colindex="${colIndex}">
+            <div id="${column.id}" class="list-group" data-col="${colIndex}">
                 ${column.items.map((item, itemIndex) => `
-                    <div class="item" data-itemindex="${itemIndex}">
+                    <div class="item">
                         ${item}
-                        <i class="fas fa-trash delete-btn" onclick="deleteItem(${colIndex}, ${itemIndex})"></i>
+                        <i class="fas fa-trash delete-btn" data-col="${colIndex}" data-item="${itemIndex}"></i>
                     </div>
                 `).join('')}
             </div>
-            <button class="add-btn" onclick="addItem(${colIndex})">
+            <button class="add-btn" data-col="${colIndex}">
                 <i class="fas fa-plus"></i> 新增計畫
             </button>
         `;
@@ -44,40 +45,50 @@ function renderBoard() {
             group: 'kanban-group',
             animation: 150,
             ghostClass: 'sortable-ghost',
-            onEnd: function() {
-                saveAllData(); // 每次拖拉完自動儲存
-            }
+            onEnd: () => saveAllData()
         });
     });
 }
 
-// 3. 動作功能：新增
-window.addItem = function(colIndex) {
-    const content = prompt("想要創造或體驗什麼？");
-    if (content && content.trim() !== "") {
-        boardData[colIndex].items.push(content.trim());
-        saveAllData();
-        renderBoard();
+// 3. 事件監聽 (解決 onclick 失效問題)
+document.addEventListener('click', function(e) {
+    // 處理新增項目
+    if (e.target.closest('.add-btn')) {
+        const colIndex = e.target.closest('.add-btn').dataset.col;
+        const content = prompt("想要創造或體驗什麼？");
+        if (content && content.trim() !== "") {
+            boardData[colIndex].items.push(content.trim());
+            saveAndRefresh();
+        }
     }
-};
 
-// 4. 動作功能：刪除
-window.deleteItem = function(colIndex, itemIndex) {
-    // 使用非同步確認，手機操作更友善
-    if (confirm("確定這個項目已經不需要了嗎？")) {
-        boardData[colIndex].items.splice(itemIndex, 1);
-        saveAllData();
-        renderBoard();
+    // 處理刪除項目
+    if (e.target.closest('.delete-btn')) {
+        const btn = e.target.closest('.delete-btn');
+        const colIndex = btn.dataset.col;
+        const itemIndex = btn.dataset.item;
+        if (confirm("確定這個項目已經不需要了嗎？")) {
+            boardData[colIndex].items.splice(itemIndex, 1);
+            saveAndRefresh();
+        }
     }
-};
+});
 
-// 5. 動作功能：編輯標題
-window.editColumn = function(colIndex, newTitle) {
-    boardData[colIndex].title = newTitle;
+// 處理編輯標題
+document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('column-title')) {
+        const colIndex = e.target.dataset.col;
+        boardData[colIndex].title = e.target.value;
+        saveAllData();
+    }
+});
+
+// 4. 儲存與重新整理
+function saveAndRefresh() {
     saveAllData();
-};
+    renderBoard();
+}
 
-// 6. 核心：存檔邏輯 (抓取目前的 DOM 順序)
 function saveAllData() {
     const updatedData = [];
     const columns = document.querySelectorAll('.list-group');
@@ -86,8 +97,8 @@ function saveAllData() {
         const items = [];
         const itemEls = colEl.querySelectorAll('.item');
         itemEls.forEach(itemEl => {
-            // 移除垃圾桶圖標的文字，只保留內容
-            const text = itemEl.innerText.replace(/\n/g, '').trim();
+            // 抓取純文字內容 (排除圖標文字)
+            const text = itemEl.childNodes[0].textContent.trim();
             items.push(text);
         });
         
@@ -101,11 +112,12 @@ function saveAllData() {
     boardData = updatedData;
     localStorage.setItem('myKanbanData', JSON.stringify(boardData));
     
-    // 視覺提示儲存成功
     const status = document.getElementById('status');
-    status.innerText = "已同步至 LocalStorage";
-    setTimeout(() => { status.innerText = "已自動儲存"; }, 2000);
+    if (status) {
+        status.innerText = "已自動儲存";
+        setTimeout(() => { status.innerText = "人生進度追蹤中"; }, 2000);
+    }
 }
 
-// 啟動系統
-document.addEventListener('DOMContentLoaded', renderBoard);
+// 啟動
+window.onload = renderBoard;
