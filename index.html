@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 人生贖回計畫 | 動態看板</title>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --bg: #f0f2f5; --column-bg: #ebedf0; --card-bg: #ffffff; --accent: #27ae60; --text: #172b4d; }
+        body { font-family: 'Segoe UI', "Microsoft JhengHei", sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; }
+        
+        .header-area { padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; max-width: 1600px; margin: 0 auto; }
+        
+        /* 響應式外框：手機橫向捲動，電腦平鋪 */
+        .board { 
+            display: flex; 
+            gap: 15px; 
+            padding: 10px; 
+            overflow-x: auto; 
+            align-items: flex-start;
+            -webkit-overflow-scrolling: touch; /* iOS 順滑捲動 */
+            min-height: calc(100vh - 100px);
+        }
+
+        .column { 
+            background: var(--column-bg); 
+            border-radius: 10px; 
+            min-width: 280px; 
+            max-width: 280px; 
+            padding: 12px; 
+            flex-shrink: 0; /* 防止被擠壓 */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .column-header { display: flex; align-items: center; margin-bottom: 12px; gap: 8px; }
+        .column-title { 
+            font-weight: 700; border: 1px solid transparent; background: transparent; 
+            font-size: 1rem; width: 100%; border-radius: 4px; padding: 4px;
+        }
+        .column-title:focus { background: white; border-color: #ddd; outline: none; }
+
+        .list-group { min-height: 50px; flex-grow: 1; }
+        
+        .item { 
+            background: var(--card-bg); padding: 12px; margin-bottom: 8px; 
+            border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); 
+            cursor: grab; position: relative; font-size: 0.95rem;
+            line-height: 1.4; word-break: break-all;
+        }
+        .item:active { cursor: grabbing; }
+
+        .delete-btn { 
+            position: absolute; top: 8px; right: 8px; 
+            color: #ccc; cursor: pointer; transition: 0.2s;
+        }
+        .item:hover .delete-btn { color: #e74c3c; }
+
+        .add-btn { 
+            width: 100%; padding: 8px; border: 1px dashed #aaa; border-radius: 6px; 
+            background: rgba(255,255,255,0.5); cursor: pointer; color: #5e6c84; 
+            font-size: 0.9rem; margin-top: 5px;
+        }
+        .add-btn:hover { background: #fff; color: var(--accent); border-color: var(--accent); }
+
+        /* 手機版微調 */
+        @media (max-width: 600px) {
+            .header-area h2 { font-size: 1.2rem; }
+            .column { min-width: 260px; max-width: 260px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header-area">
+        <h2>🚀 人生贖回計畫</h2>
+        <div id="status" style="font-size: 0.8rem; color: #888;">已自動儲存</div>
+    </div>
+
+    <div id="mainBoard" class="board">
+        </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
